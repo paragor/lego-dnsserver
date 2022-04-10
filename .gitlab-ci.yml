@@ -1,0 +1,37 @@
+stages:
+  - test
+
+unit_tests:
+  stage: test
+  image: golang:1.18
+  tags:
+    - dev
+  only:
+    - merge_requests
+    - master
+  script:
+    - test -z "$(gofmt -d -l ./pkg/ | tee /dev/stderr)"
+    - go test -v ./...
+    - go vet ./...
+
+golangci-lint:
+  image: golangci/golangci-lint:v1.45.2
+  stage: test
+  tags:
+    - dev
+  script:
+    - apt update && apt install -y jq
+    # Use default .golangci.yml file from the image if one is not present in the project root.
+    - '[ -e .golangci.yml ] || cp /golangci/.golangci.yml .'
+    # Write the code coverage report to gl-code-quality-report.json
+    # and print linting issues to stdout in the format: path/to/file:line description
+    # remove `--issues-exit-code 0` or set to non-zero to fail the job if linting issues are detected
+    - golangci-lint run --issues-exit-code 0 --out-format code-climate | tee gl-code-quality-report.json | jq -r '.[] | "\(.location.path):\(.location.lines.begin) \(.description)"'
+  only:
+    - merge_requests
+    - master
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+    paths:
+      - gl-code-quality-report.json
