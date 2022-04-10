@@ -25,8 +25,9 @@ lint-fix: install-golang-ci-lint
 
 .PHONY: bin
 bin:
-	mkdir -p dist/{linux}/{amd64}/
+	mkdir -p dist/{linux,darwin}/{amd64}/
 	GOOS=linux GOARCH=amd64 go build -o dist/linux/amd64/lego-dnsserver .
+	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/amd64/lego-dnsserver .
 
 .PHONY: git-prehook
 git-prehook:

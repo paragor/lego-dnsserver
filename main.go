@@ -94,6 +94,7 @@ func main() {
 		log.Println("unknown path")
 		return
 	})
+	log.Println("starting...")
 	err = http.ListenAndServe(listenHttp, LogMiddleware(handlerFunc))
 	if err != nil {
 		panic(err)
