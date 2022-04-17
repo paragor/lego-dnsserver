@@ -8,20 +8,20 @@ import (
 	"net/netip"
 )
 
-type DNSProvider struct {
+type DNSServer struct {
 	addr   string
 	server *dns.Server
 }
 
-func NewDNSProvider(listenAddr string) (*DNSProvider, error) {
+func NewDNSServer(listenAddr string) (*DNSServer, error) {
 	_, err := netip.ParseAddrPort(listenAddr)
 	if err != nil {
 		return nil, err
 	}
-	return &DNSProvider{addr: listenAddr}, nil
+	return &DNSServer{addr: listenAddr}, nil
 }
 
-func (s *DNSProvider) Present(fqdn, value string) error {
+func (s *DNSServer) Present(fqdn, value string) error {
 	addr, err := netip.ParseAddrPort(s.addr)
 	if err != nil {
 		return err
@@ -61,11 +61,11 @@ func (s *DNSProvider) Present(fqdn, value string) error {
 
 	return nil
 }
-func (s *DNSProvider) IsUp() bool {
+func (s *DNSServer) IsUp() bool {
 	return s.server != nil
 }
 
-func (s *DNSProvider) CleanUp() error {
+func (s *DNSServer) CleanUp() error {
 	if s.server == nil {
 		return errors.New("dns server is not running")
 	}

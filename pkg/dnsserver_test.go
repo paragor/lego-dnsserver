@@ -9,7 +9,7 @@ import (
 var listenAddr = "127.0.0.1:5352"
 
 func TestDnsProvider(t *testing.T) {
-	provider, err := NewDNSProvider(listenAddr)
+	provider, err := NewDNSServer(listenAddr)
 	assert.Nil(t, err)
 
 	fqdn := "_acme-challenge.domain."

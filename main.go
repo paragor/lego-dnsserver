@@ -45,7 +45,7 @@ func main() {
 	)
 	flag.Parse()
 
-	dnsProvider, err := pkg.NewDNSProvider(listenDns)
+	dnsServer, err := pkg.NewDNSServer(listenDns)
 	if err != nil {
 		panic(err)
 	}
@@ -66,7 +66,7 @@ func main() {
 				log.Println(err.Error())
 				return
 			}
-			err = dnsProvider.Present(legoR.Fqdn, legoR.Value)
+			err = dnsServer.Present(legoR.Fqdn, legoR.Value)
 			if err != nil {
 				http.Error(writer, err.Error(), http.StatusBadRequest)
 				log.Println(err.Error())
@@ -78,7 +78,7 @@ func main() {
 		}
 
 		if request.RequestURI == "/cleanup" {
-			err = dnsProvider.CleanUp()
+			err = dnsServer.CleanUp()
 			if err != nil {
 				http.Error(writer, err.Error(), http.StatusBadRequest)
 				log.Println(err.Error())
