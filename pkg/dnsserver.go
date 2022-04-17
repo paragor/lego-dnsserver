@@ -81,7 +81,7 @@ type dnsHandler struct {
 
 func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	if len(r.Question) == 0 {
-		log.Println("invalid dns request - no questions. force close connection")
+		log.Println("dnshandler: invalid dns request - no questions. force close connection")
 		w.Close()
 		return
 	}
@@ -99,10 +99,10 @@ func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 			},
 			Txt: []string{h.acmeResponse},
 		})
-		log.Printf("localserver dns response: found, request: %#v\n", question)
+		log.Printf("dnshandler: found, request: %#v\n", question)
 	} else {
 		m.Rcode = dns.RcodeNameError
-		log.Printf("localserver dns response: not found, request: %#v\n", question)
+		log.Printf("dnshandler: not found, request: %#v\n", question)
 	}
 	if err := w.WriteMsg(m); err != nil {
 		log.Println(err.Error())
