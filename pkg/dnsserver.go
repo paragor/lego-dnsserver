@@ -80,6 +80,11 @@ type dnsHandler struct {
 }
 
 func (h *dnsHandler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
+	if len(r.Question) == 0 {
+		log.Println("invalid dns request - no questions. force close connection")
+		w.Close()
+		return
+	}
 	m := new(dns.Msg)
 	m.SetReply(r)
 	m.Authoritative = true
