@@ -7,6 +7,15 @@ _acme-challenge.foo.com {
     forward . 127.0.0.1:5353
 }
 ```
+или bind9:
+```text
+zone "_acme-challenge.foo.com" IN {
+    type forward;
+    forwarders {
+        127.0.0.1 port 5353;
+    };
+};
+```
 
 ```text
 Usage of ./dist/darwin/amd64/lego-dnsserver:
