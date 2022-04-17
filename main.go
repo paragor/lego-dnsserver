@@ -50,52 +50,49 @@ func main() {
 		panic(err)
 	}
 
-	handlerFunc := http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if request.Method != "POST" {
-			writer.WriteHeader(http.StatusMethodNotAllowed)
-			http.Error(writer, "only POST allowed", http.StatusMethodNotAllowed)
-			log.Println("only POST allowed")
-			return
-		}
-		defer request.Body.Close()
-		if request.RequestURI == "/present" {
-			//nolint:govet
-			legoR, err := parseLegoRequest(request.Body)
-			if err != nil {
-				http.Error(writer, err.Error(), http.StatusBadRequest)
-				log.Println(err.Error())
-				return
-			}
-			err = dnsServer.Present(legoR.Fqdn, legoR.Value)
-			if err != nil {
-				http.Error(writer, err.Error(), http.StatusBadRequest)
-				log.Println(err.Error())
-				return
-			}
-			writer.WriteHeader(200)
-			_, _ = writer.Write([]byte("OK"))
-			return
-		}
+	serverMux := http.NewServeMux()
+	serverMux.Handle("/present",
+		PostOnlyMiddleware(
+			http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				//nolint:govet
+				legoR, err := parseLegoRequest(request.Body)
+				if err != nil {
+					msg := "cant parse logo request: " + err.Error()
+					log.Println(msg)
+					http.Error(writer, msg, http.StatusBadRequest)
+					return
+				}
+				defer request.Body.Close()
+				err = dnsServer.Present(legoR.Fqdn, legoR.Value)
+				if err != nil {
+					msg := "cant start dns server: " + err.Error()
+					http.Error(writer, msg, http.StatusBadRequest)
+					log.Println(msg)
+					return
+				}
+				writer.WriteHeader(200)
+				_, _ = writer.Write([]byte("OK"))
+			}),
+		),
+	)
 
-		if request.RequestURI == "/cleanup" {
-			err = dnsServer.CleanUp()
-			if err != nil {
-				http.Error(writer, err.Error(), http.StatusBadRequest)
-				log.Println(err.Error())
+	serverMux.Handle("/cleanup",
+		PostOnlyMiddleware(
+			http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+				err = dnsServer.CleanUp()
+				if err != nil {
+					http.Error(writer, err.Error(), http.StatusBadRequest)
+					log.Println(err.Error())
+					return
+				}
+				writer.WriteHeader(200)
+				_, _ = writer.Write([]byte("OK"))
 				return
-			}
-			writer.WriteHeader(200)
-			_, _ = writer.Write([]byte("OK"))
-			return
-		}
-
-		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte("unknown path"))
-		log.Println("unknown path")
-		return
-	})
+			}),
+		),
+	)
 	log.Println("starting...")
-	err = http.ListenAndServe(listenHttp, LogMiddleware(handlerFunc))
+	err = http.ListenAndServe(listenHttp, LogMiddleware(serverMux))
 	if err != nil {
 		panic(err)
 	}
@@ -104,6 +101,17 @@ func main() {
 func LogMiddleware(origin http.Handler) http.Handler {
 	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		log.Println(request.Method, request.RequestURI, request.RemoteAddr)
+		origin.ServeHTTP(writer, request)
+	})
+}
+
+func PostOnlyMiddleware(origin http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.Method != "POST" {
+			http.Error(writer, "only POST allowed", http.StatusMethodNotAllowed)
+			log.Println("405. only POST allowed")
+			return
+		}
 		origin.ServeHTTP(writer, request)
 	})
 }
