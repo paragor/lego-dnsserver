@@ -1,6 +1,9 @@
 
 .PHONY: all
-all: git-prehook fmt test lint
+all: install-git-precommit fmt test lint bin
+
+.PHONY: precommit
+precommit: install-git-precommit fmt test lint
 
 .PHONY: fmt
 fmt:
@@ -29,6 +32,6 @@ bin:
 	GOOS=linux GOARCH=amd64 go build -o dist/linux/amd64/lego-dnsserver .
 	GOOS=darwin GOARCH=amd64 go build -o dist/darwin/amd64/lego-dnsserver .
 
-.PHONY: git-prehook
-git-prehook:
+.PHONY: install-git-precommit
+install-git-precommit:
 	cp hacks/githook-pre-commit.sh .git/hooks/pre-commit

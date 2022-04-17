@@ -1,3 +1,3 @@
 #!/bin/bash
 
-make all
+make precommit
